@@ -9,6 +9,7 @@ So I studied manual, scripting API and made simple implementation.
 - Manage client connection status with scroll view.
 - Send custom network message.
 - Auto reconnecting when the client has lost connection.
+- Make your own UI for the NetworkManager instead of NetworkManager HUD Component
 
 # The fast track
 All you have to do to start using it in your project:
