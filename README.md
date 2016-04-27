@@ -1,7 +1,10 @@
 # What's this?
 I needed to implement a networking application with a server in a local network, with no Internet access.
+
 Then I found that unity5 networking api providing exactly what i want.
+
 So I studied manual, scripting API and made simple implementation.
+
 
 # Features
 - Auto discovery( make clients discover server's address at startup )
