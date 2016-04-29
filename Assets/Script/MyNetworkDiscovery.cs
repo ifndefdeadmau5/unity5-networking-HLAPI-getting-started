@@ -14,9 +14,15 @@ public class MyNetworkDiscovery : NetworkDiscovery
     void Awake()
     {
         // Modified and dded by projaguar
-        netManager = GameObject.FindWithTag("NetworkManager").GetComponent<MyNetManager>();
+       
 
-        Initialize();
+        
+    }
+    
+    void Start( )
+    {
+         netManager = GameObject.FindWithTag("NetworkManager").GetComponent<MyNetManager>();
+         Initialize();
     }
     public override void OnReceivedBroadcast(string fromAddress, string data)
     {

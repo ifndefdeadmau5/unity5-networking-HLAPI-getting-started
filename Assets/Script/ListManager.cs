@@ -15,20 +15,19 @@ public class ListManager : MonoBehaviour
         NetManager = GameObject.FindWithTag("NetworkManager").GetComponent<MyNetManager>();
         RectTransform panel = canvas.GetComponentInChildren<RectTransform>();
     }
-
-
-    public void Init()
+    
+    void Start()
     {
-
+        NetManager.SetupServer( );
     }
-
+    
     public void addItem(string uid)
     {
 
 
         if (!dic.ContainsKey(uid))
         {
-            ItemPrefab.GetComponent<Text>().text = uid;
+            ItemPrefab.transform.FindChild("uid").GetComponent<Text>().text = uid;
             GameObject a = (GameObject)Instantiate(ItemPrefab);
             a.transform.SetParent(gameObject.transform, false);
 
@@ -47,11 +46,11 @@ public class ListManager : MonoBehaviour
         Debug.Log(uid + " " + isConnected);
         if (isConnected)
         {
-            GetPrefab.GetComponent<Text>().color = new Color(0.0f, 0.0f, 0.0f);
+            GetPrefab.transform.FindChild("uid").GetComponent<Text>().color = new Color(0.0f, 0.0f, 0.0f);
         }
         else
         {
-            GetPrefab.GetComponent<Text>().color = new Color(1.0f, 0.0f, 0.0f);
+            GetPrefab.transform.FindChild("uid").GetComponent<Text>().color = new Color(1.0f, 0.0f, 0.0f);
         }
     }
 

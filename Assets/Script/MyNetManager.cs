@@ -2,34 +2,47 @@
 using System.Collections;
 using UnityEngine.Networking;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class MyNetManager : NetworkManager
 {
     NetworkClient myClient;
     public string address;
-    // public UILabel ConnectedLabel;
     public string uid;
     public NetworkDiscovery discovery;
     public ListManager listManager;
-    /** 
-    네트워크 메시지 클래스 정의
-    클라이언트 쪽과 클래스 명, 변수명을 정확히 일치시켜야 합니다.
-    **/
+    PlayerManager playerManager;
 
     void Start()
     {
         address = null;
 		uid = SystemInfo.deviceUniqueIdentifier;
+        playerManager = PlayerManager.Instance;
+        myClient = new NetworkClient();
+        if( "client" == SceneManager.GetActiveScene().name )
+        {
+            SetupClient( );
+        } 
     }
+    
+    /** Declare NetworkMessage class **/
     public class UidMessage : MessageBase
     {
         public string uid;
     };
+    
+    public class CustomMessage : MessageBase
+    {
+        public string text;
+    };
 
     public class MyMsgType
     {
-        // unique device id
-        public static short UID = MsgType.Highest + 3;
+        // Unique device id
+        public static short UID = MsgType.Highest + 1;
+        // Your custom message type
+        public static short Custom = MsgType.Highest + 2;
     };
 
     public bool isConnected()
@@ -37,11 +50,10 @@ public class MyNetManager : NetworkManager
         return myClient.isConnected;
     }
 
-    public void SendUID()
+    public void sendUid()
     {
         UidMessage msg = new UidMessage();
         msg.uid = uid;
-
 
         myClient.Send(MyMsgType.UID, msg);
     }
@@ -50,30 +62,22 @@ public class MyNetManager : NetworkManager
     {
         if (NetworkServer.active)
         {
-            PlayerManager playerManager = PlayerManager.Instance;
+            
             Debug.Log("Connected address:" + netMsg.conn.address);
         }
         else
         {
             Debug.Log("Connected :" + netMsg.conn.address);
-            SendUID();
-            // ConnectedLabel.text = "Connected ^.^";
+            sendUid();
             Debug.Log(myClient.GetRTT());
+            discovery.StopBroadcast( );
         }
-
-
     }
 
     public void OnDisconnected(NetworkMessage netMsg)
     {
         Debug.Log("Disconnected :" + netMsg.conn.address);
-        // ConnectedLabel.text = "Disconnected T.T";
 
-
-        Debug.Log("호스트 제거" + netMsg.conn.hostId);
-
-        //NetworkTransport.RemoveHost (netMsg.conn.hostId);
-        // 브로드캐스팅 실행 중이 아니면 ( 검사 진행 중이라면 )
         if (!discovery.running)
         {
             myClient.ReconnectToNewHost(address, 4444);
@@ -82,16 +86,10 @@ public class MyNetManager : NetworkManager
         if (NetworkServer.active)
         {
             Debug.Log("Disconnected :" + netMsg.conn.connectionId);
-            PlayerManager playerManager = PlayerManager.Instance;
-
             string disconnectedUid = playerManager.getPlayerUid(netMsg.conn.connectionId);
             if (null != disconnectedUid)
             {
                 listManager.displayConnectionState( disconnectedUid, false );
-            }
-            else
-            {
-                Debug.Log("disconnectedUid is NULL");
             }
 
             playerManager.setPlayerOffline(netMsg.conn.connectionId);
@@ -103,12 +101,8 @@ public class MyNetManager : NetworkManager
     {
         UidMessage msg = netMsg.ReadMessage<UidMessage>();
         Debug.Log("OnUID " + msg.uid);
-
-
-        PlayerManager playerManager = PlayerManager.Instance;
-
-        // If UID is already exsist, do not add new player
-        // 재접속 했을 경우
+        
+        // If UID already exsist, do not add new player
         if (playerManager.isExsistUID(msg.uid))
         {
             playerManager.setPlayerConnId(netMsg.conn.connectionId, msg.uid);// connID 새로 부여
@@ -117,41 +111,37 @@ public class MyNetManager : NetworkManager
         }
         else
         {
-            // 신규 접속
+            // New connection
             playerManager.addPlayer(netMsg.conn.connectionId, msg.uid); //
             listManager.addItem(msg.uid);
-
         }
     }
 
-
+    public void OnCustomMessage(NetworkMessage netMsg)
+    {
+        CustomMessage msg = netMsg.ReadMessage<CustomMessage>();
+        Debug.Log("OnCustomMessage" + msg.text );
+    }
     // 모든 클라이언트 팅구기
     public void kickAllClient()
     {
         NetworkServer.DisconnectAll();
     }
 
-    /* 아래는 NeteworkManager 에서 상속된 메서드 */
-    public override void OnStartHost()
+    /* 사용자 정의 함수 */
+    public void sendMessageToClient( string uid )
     {
-        Debug.Log("OnStartHost( )");
+         CustomMessage msg = new CustomMessage();
+        int connID = -1;
+        msg.text = "Hello";
+      
+        PlayerManager.playerData Data = playerManager.getPlayerByUid(uid);
+        connID = Data.ConnID;
+        
+        Debug.Log( connID + ", " + msg.text );
+        NetworkServer.SendToClient(connID, MyMsgType.Custom, msg);
     }
-
-    public override void OnStartClient(NetworkClient client)
-    {
-        Debug.Log("OnStartClient( )");
-
-        discovery.showGUI = false;
-    }
-
-    public override void OnStopClient()
-    {
-        Debug.Log("OnStopClient( )");
-        discovery.StopBroadcast();
-        discovery.showGUI = true;
-    }
-
-    //   /* 사용자 정의 함수 */
+    
     public void SetupServer()
     {
         if (!NetworkServer.active)
@@ -167,10 +157,7 @@ public class MyNetManager : NetworkManager
             NetworkServer.RegisterHandler(MsgType.Disconnect, OnDisconnected);
             NetworkServer.RegisterHandler(MyMsgType.UID, OnUID);
         }
-        else
-        {
-            //    NGUIDebug.Log("already started");
-        }
+        
         if (!discovery.running)
         {
             discovery.Initialize();
@@ -182,7 +169,7 @@ public class MyNetManager : NetworkManager
     public void SetupClient()
     {
         Debug.Log("SetupClient()");
-        myClient = new NetworkClient();
+        
         ConnectionConfig config = new ConnectionConfig();
         config.AddChannel(QosType.ReliableSequenced);
         config.AddChannel(QosType.Unreliable);
@@ -193,6 +180,7 @@ public class MyNetManager : NetworkManager
 
         myClient.RegisterHandler(MsgType.Connect, OnConnected);
         myClient.RegisterHandler(MsgType.Disconnect, OnDisconnected);
+        myClient.RegisterHandler(MyMsgType.Custom, OnCustomMessage);   
     }
 
     public void ConnectToServer(string givenAddress)
@@ -203,8 +191,6 @@ public class MyNetManager : NetworkManager
 
     public void DisableServer()
     {
-        PlayerManager playerManager = PlayerManager.Instance;
-
         Debug.Log("StopServer");
         if (NetworkServer.active)
         {

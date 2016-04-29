@@ -7,13 +7,12 @@ using System.Net;
 
 public class PlayerManager : MonoBehaviour
 {
-    /** 이 클래스의 싱글톤 객체 */
+    /** Singleton of this object **/
     static PlayerManager current = null;
 
-    /** 객체를 생성하기 위한 GameObject */
+    /** GameObject for create new object **/
     static GameObject container = null;
 
-    /** 전역 변수 **/
     public class playerData
     {
         public int ConnID;
@@ -29,7 +28,7 @@ public class PlayerManager : MonoBehaviour
 
     public List<playerData> playerList = new List<playerData>();
 
-    /** 싱글톤 객체 만들기 */
+    /** Create singleton object **/
     public static PlayerManager Instance
     {
         get
@@ -44,13 +43,19 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
+    /* Add new player to playerlist */
     public void addPlayer(int connId, string uid)
     {
         playerList.Add(new playerData(connId, uid));
         Debug.Log("PlayerAdded");
     }
 
-    // 연결 해제시 playerList 에서 connId 를 '9999(오프라인 상태)'로 변경합니다.
+
+    
+    /// <summary>
+    ///  change connId to '9999(offline)' when client has disconnected
+    /// </summary>
+    /// <param name="connId"></param>
     public void setPlayerOffline(int connId)
     {
         for (int i = 0; i < playerList.Count; i++)
@@ -93,6 +98,20 @@ public class PlayerManager : MonoBehaviour
             if (connID == playerList[i].ConnID)
             {
                 return playerList[i].uid;
+            }
+        }
+
+        return null;
+    }
+
+    public playerData getPlayerByUid(string uid)
+    {
+
+        for (int i = 0; i < playerList.Count; i++)
+        {
+            if (uid == playerList[i].uid)
+            {
+                return playerList[i];
             }
         }
 
