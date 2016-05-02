@@ -45,31 +45,15 @@ public class MyNetManager : NetworkManager
         public static short Custom = MsgType.Highest + 2;
     };
 
-    public bool isConnected()
-    {
-        return myClient.isConnected;
-    }
-
-    public void sendUid()
-    {
-        UidMessage msg = new UidMessage();
-        msg.uid = uid;
-
-        myClient.Send(MyMsgType.UID, msg);
-    }
-
+   /** Callback functions **/
     public void OnConnected(NetworkMessage netMsg)
     {
-        if (NetworkServer.active)
+        Debug.Log("Connected :" + netMsg.conn.address);
+        
+        // if started as client
+        if (!NetworkServer.active)
         {
-            
-            Debug.Log("Connected address:" + netMsg.conn.address);
-        }
-        else
-        {
-            Debug.Log("Connected :" + netMsg.conn.address);
             sendUid();
-            Debug.Log(myClient.GetRTT());
             discovery.StopBroadcast( );
         }
     }
@@ -86,7 +70,7 @@ public class MyNetManager : NetworkManager
         if (NetworkServer.active)
         {
             Debug.Log("Disconnected :" + netMsg.conn.connectionId);
-            string disconnectedUid = playerManager.getPlayerUid(netMsg.conn.connectionId);
+            string disconnectedUid = playerManager.getPlayerUidByConnID(netMsg.conn.connectionId);
             if (null != disconnectedUid)
             {
                 listManager.displayConnectionState( disconnectedUid, false );
@@ -96,7 +80,10 @@ public class MyNetManager : NetworkManager
         }
     }
 
-    //// 접속 후 기기 고유값을 받았을 때, 유저 추가
+    /// <summary>
+    /// Called when UidMessage has received.
+    /// </summary>
+    /// <param name="netMsg"></param>
     public void OnUID(NetworkMessage netMsg)
     {
         UidMessage msg = netMsg.ReadMessage<UidMessage>();
@@ -106,7 +93,7 @@ public class MyNetManager : NetworkManager
         if (playerManager.isExsistUID(msg.uid))
         {
             playerManager.setPlayerConnId(netMsg.conn.connectionId, msg.uid);// connID 새로 부여
-            string connectedUid = playerManager.getPlayerUid(netMsg.conn.connectionId);
+            string connectedUid = playerManager.getPlayerUidByConnID(netMsg.conn.connectionId);
             listManager.displayConnectionState( connectedUid, true );
         }
         else
@@ -117,18 +104,41 @@ public class MyNetManager : NetworkManager
         }
     }
 
+    /// <summary>
+    /// Called when custom network message has received.
+    /// </summary>
+    /// <param name="netMsg">A network message object</param>
     public void OnCustomMessage(NetworkMessage netMsg)
     {
         CustomMessage msg = netMsg.ReadMessage<CustomMessage>();
-        Debug.Log("OnCustomMessage" + msg.text );
+        Debug.Log("OnCustomMessage : " + msg.text );
     }
-    // 모든 클라이언트 팅구기
-    public void kickAllClient()
+    
+    /// <summary>
+    /// Check if client is currently connected.
+    /// </summary>
+    /// <returns></returns>
+    public bool isConnected()
     {
-        NetworkServer.DisconnectAll();
+        return myClient.isConnected;
     }
 
-    /* 사용자 정의 함수 */
+    /// <summary>
+    /// Send unique device identifier to server to identify this client.
+    /// </summary>
+    public void sendUid()
+    {
+        UidMessage msg = new UidMessage();
+        msg.uid = uid;
+
+        myClient.Send(MyMsgType.UID, msg);
+    }
+
+
+    /// <summary>
+    /// Send raw network message to client
+    /// </summary>
+    /// <param name="uid">A unique device identifier.</param>
     public void sendMessageToClient( string uid )
     {
          CustomMessage msg = new CustomMessage();
@@ -138,11 +148,13 @@ public class MyNetManager : NetworkManager
         PlayerManager.playerData Data = playerManager.getPlayerByUid(uid);
         connID = Data.ConnID;
         
-        Debug.Log( connID + ", " + msg.text );
         NetworkServer.SendToClient(connID, MyMsgType.Custom, msg);
     }
     
-    public void SetupServer()
+    /// <summary>
+    /// Start as server and if discovery not running, start broadcast.
+    /// </summary>
+    public void SetupServer( )
     {
         if (!NetworkServer.active)
         {
@@ -165,8 +177,10 @@ public class MyNetManager : NetworkManager
         }
     }
 
-
-    public void SetupClient()
+    /// <summary>
+    /// Start as client and if discovery not running, start broadcast receive mode.
+    /// </summary>
+    public void SetupClient( )
     {
         Debug.Log("SetupClient()");
         
@@ -178,34 +192,38 @@ public class MyNetManager : NetworkManager
         discovery.Initialize();
         discovery.StartAsClient();
 
+        // Register message event handler
         myClient.RegisterHandler(MsgType.Connect, OnConnected);
         myClient.RegisterHandler(MsgType.Disconnect, OnDisconnected);
         myClient.RegisterHandler(MyMsgType.Custom, OnCustomMessage);   
     }
 
+    /// <summary>
+    /// Connect to server with IP address.
+    /// </summary>
+    /// <param name="givenAddress">An IP address trying to connect</param>
     public void ConnectToServer(string givenAddress)
     {
         if (null == address) { address = givenAddress; }
         myClient.Connect(givenAddress, 4444);
     }
 
+    /// <summary>
+    /// Initialize NetworkServer object and Stop listening on port.
+    /// </summary>
     public void DisableServer()
     {
         Debug.Log("StopServer");
         if (NetworkServer.active)
         {
-            Debug.Log("서버 가동중이므로 닫습니다");
-            NetworkServer.UnregisterHandler(MsgType.Connect);
-            NetworkServer.UnregisterHandler(MsgType.Disconnect);
-            NetworkServer.UnregisterHandler(MyMsgType.UID);
 
+            NetworkServer.ClearHandlers();
+            NetworkServer.Reset();
             NetworkServer.Shutdown();
         }
 
         if (discovery.running)
         {
-            Debug.Log("브로드캐스팅 중이므로 중지합니다.");
-
             discovery.StopBroadcast();
         }
     }

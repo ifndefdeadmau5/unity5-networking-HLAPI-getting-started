@@ -7,24 +7,28 @@ public class ListManager : MonoBehaviour
 {
     MyNetManager NetManager;
     public GameObject ItemPrefab;
-    public Canvas canvas;
     IDictionary<string, GameObject> dic = new Dictionary<string, GameObject> { };
     GameObject GetPrefab;
+    
     void Awake()
     {
         NetManager = GameObject.FindWithTag("NetworkManager").GetComponent<MyNetManager>();
-        RectTransform panel = canvas.GetComponentInChildren<RectTransform>();
     }
     
     void Start()
     {
+        // Start the server manually...
+        // if you want to change the server starting point,
+        // move this method to another function.
         NetManager.SetupServer( );
     }
     
+    /// <summary>
+    /// Add Instantiated object to layout group.
+    /// </summary>
+    /// <param name="uid">A unique device identifier.</param>
     public void addItem(string uid)
     {
-
-
         if (!dic.ContainsKey(uid))
         {
             ItemPrefab.transform.FindChild("uid").GetComponent<Text>().text = uid;
@@ -35,6 +39,11 @@ public class ListManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Display current connection state with text color.
+    /// </summary>
+    /// <param name="uid">A unique device identifier.</param>
+    /// <param name="isConnected">Connection status</param>
     public void displayConnectionState(string uid, bool isConnected)
     {
         if (null == uid)

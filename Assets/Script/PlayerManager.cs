@@ -5,6 +5,10 @@ using System.Text;
 using System.IO;
 using System.Net;
 
+
+/// <summary>
+/// The class that manage connected client's data.
+/// </summary>
 public class PlayerManager : MonoBehaviour
 {
     /** Singleton of this object **/
@@ -28,7 +32,10 @@ public class PlayerManager : MonoBehaviour
 
     public List<playerData> playerList = new List<playerData>();
 
-    /** Create singleton object **/
+    /// <summary>
+    /// Create singleton object
+    /// </summary>
+    /// <returns>A singleton object.</returns>
     public static PlayerManager Instance
     {
         get
@@ -43,19 +50,21 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
-    /* Add new player to playerlist */
+    /// <summary>
+    /// Add new player to playerlist
+    /// </summary>
+    /// <param name="connId">Unique identifier for this connection.</param>
+    /// <param name="uid">A unique device identifier.</param>
     public void addPlayer(int connId, string uid)
     {
         playerList.Add(new playerData(connId, uid));
         Debug.Log("PlayerAdded");
     }
-
-
     
     /// <summary>
-    ///  change connId to '9999(offline)' when client has disconnected
+    ///  Change connId to '9999(offline)' when client has disconnected
     /// </summary>
-    /// <param name="connId"></param>
+    /// <param name="connId">Unique identifier for this connection.</param>
     public void setPlayerOffline(int connId)
     {
         for (int i = 0; i < playerList.Count; i++)
@@ -68,6 +77,11 @@ public class PlayerManager : MonoBehaviour
     }
 
     // 연결시 playerList 에서 uid를 조회하여 새로운 connId를 부여합니다.
+    /// <summary>
+    /// Assign new connection id for reconnected client.
+    /// </summary>
+    /// <param name="connId">Unique identifier for this connection.</param>
+    /// <param name="uid">A unique device identifier.</param>
     public void setPlayerConnId(int connId, string uid)
     {
         for (int i = 0; i < playerList.Count; i++)
@@ -77,6 +91,11 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// returns true if uid already exsist.
+    /// </summary>
+    /// <param name="uid">A unique device identifier.</param>
+    /// <returns></returns>
     public bool isExsistUID(string uid)
     {
         for (int i = 0; i < playerList.Count; i++)
@@ -88,9 +107,15 @@ public class PlayerManager : MonoBehaviour
         }
 
         return false;
+    
     }
-
-    public string getPlayerUid(int connID)
+    
+    /// <summary>
+    /// Get player's device Unique Identifier(uid) with connection id
+    /// </summary>
+    /// <param name="connID">The Unique identifier for this connection</param>
+    /// <returns>A unique device identifier.</returns>
+    public string getPlayerUidByConnID(int connID)
     {
 
         for (int i = 0; i < playerList.Count; i++)
@@ -104,6 +129,11 @@ public class PlayerManager : MonoBehaviour
         return null;
     }
 
+    /// <summary>
+    /// Get player's Data with unique device identifier.
+    /// </summary>
+    /// <param name="uid">A unique device identifier.</param>
+    /// <returns>Player's data</returns>
     public playerData getPlayerByUid(string uid)
     {
 
