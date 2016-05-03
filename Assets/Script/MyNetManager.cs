@@ -17,6 +17,8 @@ public class MyNetManager : NetworkManager
     public NetworkDiscovery discovery;
     public ListManager listManager;
     PlayerManager playerManager;
+    public Text receivedText;
+    public InputField inputfield;
 
     void Start()
     {
@@ -115,6 +117,12 @@ public class MyNetManager : NetworkManager
     public void OnCustomMessage(NetworkMessage netMsg)
     {
         CustomMessage msg = netMsg.ReadMessage<CustomMessage>();
+        receivedText.text += msg.text + "\n";
+        
+        if( NetworkServer.active )
+        {
+            NetworkServer.SendToAll( MyMsgType.Custom, msg );
+        }
         Debug.Log("OnCustomMessage : " + msg.text );
     }
     
@@ -156,6 +164,20 @@ public class MyNetManager : NetworkManager
     }
     
     /// <summary>
+    /// Send raw network message to server
+    /// </summary>
+    /// <param name="text">A message text will sended.</param>
+    public void sendMessageToServer( )
+    {
+        CustomMessage msg = new CustomMessage();
+        msg.text = inputfield.text;
+        inputfield.text = "";
+
+
+        myClient.Send(MyMsgType.Custom, msg);
+    }
+    
+    /// <summary>
     /// Start as server and if discovery not running, start broadcast.
     /// </summary>
     public void SetupServer( )
@@ -172,6 +194,7 @@ public class MyNetManager : NetworkManager
             NetworkServer.RegisterHandler(MsgType.Connect, OnConnected);
             NetworkServer.RegisterHandler(MsgType.Disconnect, OnDisconnected);
             NetworkServer.RegisterHandler(MyMsgType.UID, OnUID);
+            NetworkServer.RegisterHandler(MyMsgType.Custom, OnCustomMessage);   
         }
         
         if (!discovery.running)
