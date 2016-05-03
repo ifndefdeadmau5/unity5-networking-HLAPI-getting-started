@@ -5,6 +5,10 @@ using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
+/// <summary>
+/// The custom networkmanager derived from 'NetworkManager'.
+/// you can override virtual function to implement customize behaviour.
+/// </summary>
 public class MyNetManager : NetworkManager
 {
     NetworkClient myClient;
@@ -83,7 +87,7 @@ public class MyNetManager : NetworkManager
     /// <summary>
     /// Called when UidMessage has received.
     /// </summary>
-    /// <param name="netMsg"></param>
+    /// <param name="netMsg">A network message object</param>
     public void OnUID(NetworkMessage netMsg)
     {
         UidMessage msg = netMsg.ReadMessage<UidMessage>();
@@ -117,7 +121,7 @@ public class MyNetManager : NetworkManager
     /// <summary>
     /// Check if client is currently connected.
     /// </summary>
-    /// <returns></returns>
+    /// <returns>returns true if client is connected.</returns>
     public bool isConnected()
     {
         return myClient.isConnected;

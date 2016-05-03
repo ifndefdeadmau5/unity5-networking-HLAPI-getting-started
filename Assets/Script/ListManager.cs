@@ -3,6 +3,9 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 
+/// <summary>
+/// This script is used by server scene.
+/// </summary>
 public class ListManager : MonoBehaviour
 {
     MyNetManager NetManager;
