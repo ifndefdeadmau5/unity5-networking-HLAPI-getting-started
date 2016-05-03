@@ -98,7 +98,8 @@ public class MyNetManager : NetworkManager
         // If UID already exsist, do not add new player
         if (playerManager.isExsistUID(msg.uid))
         {
-            playerManager.setPlayerConnId(netMsg.conn.connectionId, msg.uid);// connID 새로 부여
+            // Assign new connection id for re-connected client.
+            playerManager.setPlayerConnId(netMsg.conn.connectionId, msg.uid);
             string connectedUid = playerManager.getPlayerUidByConnID(netMsg.conn.connectionId);
             listManager.displayConnectionState( connectedUid, true );
         }
