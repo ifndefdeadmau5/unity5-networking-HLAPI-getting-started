@@ -118,11 +118,19 @@ public class MyNetManager : NetworkManager
     public void OnCustomMessage(NetworkMessage netMsg)
     {
         CustomMessage msg = netMsg.ReadMessage<CustomMessage>();
-        receivedText.text += msg.text + "\n";
+     
         
         if( NetworkServer.active )
         {
+            string uid = playerManager.getPlayerUidByConnID(netMsg.conn.connectionId);
+            uid = uid.Substring(0, 10);
+            receivedText.text += msg.text = "[" + uid + "...]:" + msg.text + "\n";
+
             NetworkServer.SendToAll( MyMsgType.Custom, msg );
+        }
+        else
+        {
+            receivedText.text += msg.text;
         }
         Debug.Log("OnCustomMessage : " + msg.text );
     }
