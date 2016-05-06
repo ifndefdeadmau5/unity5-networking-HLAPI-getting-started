@@ -4,6 +4,9 @@ Then I found that unity5 networking api providing exactly what i want.
 So I studied manual, scripting API and made simple & light implementation providing basic features.
 It will be useful for non-game, which like manage client's realtime status.
 
+In my case, UNET is actually quite strong.
+I am using this unity multiplayer feature as a kind of test tool for children. About 2~30 mobile devices connect to server(also mobile device), and then test result are displayed on server in realtime. 
+
 
 # Features
 - Auto discovery( make clients discover server's address at startup )
